@@ -1,1 +1,1 @@
-This is Interactive Bar chart using D3.js
+This is Interactive Bar chart using canvas.js
