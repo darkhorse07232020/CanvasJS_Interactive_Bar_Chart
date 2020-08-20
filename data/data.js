@@ -1,4 +1,4 @@
-[
+var data1=[
     {
         "risk group": "Diabetes",
         "registered": 64.2721109,
