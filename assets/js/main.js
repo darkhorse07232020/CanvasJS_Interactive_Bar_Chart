@@ -37,6 +37,10 @@ function show_chart(){
     chart.options.data.push({
         axisYType: "secondary",
         type: "stackedBar",
+        indexLabelPlacement: "inside",
+        indexLabelFontColor: "white",
+        indexLabelFontSize: 16,
+        indexLabel: '{y}%',
         color: '#005ce6',
         name: 'Original',
         dataPoints: table_data
@@ -44,6 +48,9 @@ function show_chart(){
     chart.options.data.push({
         axisYType: "secondary",
         type: "stackedBar",
+        indexLabelPlacement: "inside",
+        indexLabelFontColor: "black",
+        indexLabelFontSize: 16,
         color: '#d9d9d9',
         name: 'Appended',
         dataPoints: second_data
@@ -164,12 +171,13 @@ $("#chartContainer > .canvasjs-chart-container").on({
     mouseup: function (e) {
         var stackedSums = sumUpStacked(chart.data, chartType);
         if (selectedDataSeries != null) {
-            if (selectedSumIndex === 0){
-                selectedDataSeries[selectedDatapointIndex].y = yValue;
+        //     if (selectedSumIndex === 0){
+        //         selectedDataSeries[selectedDatapointIndex].y = yValue;
                 
-            } else{
+        //     } else{
                 selectedDataSeries[selectedDatapointIndex].y = yValue - stackedSums[selectedDataPointX][selectedSumIndex - 1].stackedSum;
-            }
+                selectedDataSeries[selectedDatapointIndex].indexLabel = yValue + '%';
+            // }
             chart.render();
         }
         mouseDown = false;
