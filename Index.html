@@ -14,7 +14,7 @@
     <body>
         <div class='container mt-3 border' align='center' id='main_area'>
             <h1>Patient Chart</h1>
-            <div id='chartContainer' style="height: 400px;"></div>
+            <div id='chartContainer' style="width:80%; height: 350px;"></div>
             <div class='row' style="text-align: left;">
                 <div id='filter_area0' class="form-check col-4"></div>
                 <div id='filter_area1' class="form-check col-4"></div>
@@ -27,41 +27,56 @@
 
             var chart = new CanvasJS.Chart("chartContainer", {
                 animationEnabled: true,
+                toolTip: {
+                    shared: true
+                },
                 axisY2: {
                     minimum: 0,
                     maximum: 100,
                     interval: 10,
                     gridColor: "rgba(1,77,101,.1)",
-                },
-                data: [{
-                    axisYType: "secondary",
-                    type: "stackedBar",
-                    color: '#005ce6',
-                }]
+                }
             });
 
-            function show_chart()
-            {
-                chart.options.data[0].dataPoints = [];
-                
-                table_data = data1.map((el, i) => {
-                    return {
-                        'label': el['risk group'],
-                        'x': (data1.length - i - 1) * 10,
-                        'y': Math.round(el['vaccinated'] * 100 / el['registered'])
+            show_chart();
+
+            function show_chart(){
+
+                chart.options.data = [];
+
+                table_data = [];
+                second_data=[];
+                data1.forEach((el, i) => {
+                    if(document.getElementById(el['risk group']).checked){
+                        table_data.unshift({
+                            'label': el['risk group'],
+                            'y': Math.round(el['vaccinated'] * 100 / el['registered'])
+                        });
+                        second_data.unshift({
+                            'y': 0
+                        })
                     }
                 });
 
-                for(var i in dps) {
-                    var xVal = dps[i].x;
-                    chart.options.data[0].dataPoints.push({x: new Date(xVal), y: dps[i].y});
-                }
-                chart.render();
+                chart.options.data.push({
+                    axisYType: "secondary",
+                    type: "stackedBar",
+                    color: '#005ce6',
+                    name: 'Original',
+                    dataPoints: table_data
+                });
+                chart.options.data.push({
+                    axisYType: "secondary",
+                    type: "stackedBar",
+                    color: '#d9d9d9',
+                    name: 'Appended',
+                    dataPoints: second_data
+                });
                 chart.render();
             }
 
-            var xSnapDistance = 3;
-            var ySnapDistance = 5;
+            var xSnapDistance = 0;
+            var ySnapDistance = 0;
 
             var xValue, yValue;
 
@@ -86,19 +101,17 @@
             function searchDataPoint(stackedValues) {
                 for (x in stackedValues) {
                     if (stackedValues.hasOwnProperty(x) && (xValue >= Number(x) - xSnapDistance && xValue <= Number(x) + xSnapDistance)) {
-                        for (var i = 0; i < stackedValues[x].length; i++)
-                            if (yValue >= stackedValues[x][i].stackedSum - ySnapDistance && yValue <= stackedValues[x][i].stackedSum + ySnapDistance) {
-                                if (mouseDown) {
-                                    selectedDataPointX = x;
-                                    selectedDataSeries = stackedValues[x][i].dataSeries;
-                                    selectedDatapointIndex = stackedValues[x][i].dataPointIndex;
-                                    selectedSumIndex = i;
-                                    return;
-                                } else {
-                                    changeCursor = true;
-                                    return;
-                                }
-                            }
+
+                        if (mouseDown) {
+                            selectedDataPointX = x;
+                            selectedDataSeries = stackedValues[x][1].dataSeries;
+                            selectedDatapointIndex = stackedValues[x][1].dataPointIndex;
+                            selectedSumIndex = 1;
+                            return;
+                        } else {
+                            changeCursor = true;
+                            return;
+                        }
                     } else {
                         selectedDataPointX = null;
                         selectedDataSeries = null;
@@ -136,7 +149,6 @@
                 }
                 return stackedSums;
             }
-
 
             $("#chartContainer > .canvasjs-chart-container").on({
                 mousedown: function (e) {
@@ -176,10 +188,12 @@
                 mouseup: function (e) {
                     var stackedSums = sumUpStacked(chart.data, chartType);
                     if (selectedDataSeries != null) {
-                        if (selectedSumIndex === 0)
+                        if (selectedSumIndex === 0){
                             selectedDataSeries[selectedDatapointIndex].y = yValue;
-                        else
+                            
+                        } else{
                             selectedDataSeries[selectedDatapointIndex].y = yValue - stackedSums[selectedDataPointX][selectedSumIndex - 1].stackedSum;
+                        }
                         chart.render();
                     }
                     mouseDown = false;
@@ -187,9 +201,8 @@
             });
 
             function create_filter(new_data) {
-                console.log(chart.data);
                 for (row in new_data) {
-                    $('#filter_area' + (row % 3)).append(`<div class="form-check">
+                    $('#filter_area' + (row % 3)).append(`<div class="form-check" onclick='show_chart()'>
                     <label class="form-check-label" for="` + new_data[row]['risk group'] + `">
                     <input type="checkbox" class="form-check-input" id="` + new_data[row]['risk group'] + `" checked>` + new_data[row]['risk group'] + `</label>
                     </div>`);
